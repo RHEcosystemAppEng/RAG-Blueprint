@@ -1,0 +1,79 @@
+# Default values for pgvector.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: docker.io/pgvector/pgvector
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: pg17
+
+imagePullSecrets: []
+
+nameOverride: "pgvector"
+fullnameOverride: "pgvector"
+
+serviceAccount:
+  create: false
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 5432
+
+env:
+  - name: POSTGRES_USER
+    valueFrom:
+      secretKeyRef:
+        key: username
+        name: pgvector
+  - name: POSTGRES_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        key: password
+        name: pgvector
+  - name: POSTGRES_PORT
+    valueFrom:
+      secretKeyRef:
+        key: port
+        name: pgvector
+  - name: POSTGRES_DBNAME
+    valueFrom:
+      secretKeyRef:
+        key: dbname
+        name: pgvector
+
+readinessProbe:
+  exec:
+    command:
+      - /bin/sh
+      - -c
+      - exec pg_isready -U $POSTGRES_USER -d $POSTGRES_DBNAME -h 127.0.0.1 -p $POSTGRES_PORT
+
+resources: {}
+
+autoscaling:
+  enabled: false
+
+volumeClaimTemplates:
+  - metadata:
+      name: pg-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 5Gi
+
+volumeMounts:
+  - mountPath: /var/lib/postgresql
+    name: pg-data
+
+nodeSelector: {}
+affinity: {}

@@ -55,6 +55,32 @@ env:
     value: http://safety:8000/v1
   - name: OTEL_ENDPOINT
     value: http://otel-collector-collector.observability-hub.svc.cluster.local:4318/v1/traces
+  - name: POSTGRES_USER
+    valueFrom:
+      secretKeyRef:
+        key: username
+        name: pgvector
+  - name: POSTGRES_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        key: password
+        name: pgvector
+  - name: POSTGRES_HOST
+    valueFrom:
+      secretKeyRef:
+        key: host
+        name: pgvector
+  - name: POSTGRES_PORT
+    valueFrom:
+      secretKeyRef:
+        key: port
+        name: pgvector
+  - name: PGVECTOR_DBNAME
+    valueFrom:
+      secretKeyRef:
+        key: dbname
+        name: pgvector
+
 
 
 resources: {}

@@ -35,6 +35,14 @@ providers:
         type: sqlite
         namespace: null
         db_path: ${env.SQLITE_STORE_DIR:~/.llama/distributions/remote-vllm}/faiss_store.db
+  - provider_id: pgvector
+    provider_type: remote::pgvector
+    config:
+      host: ${env.POSTGRES_HOST:pgvector}
+      port: ${env.POSTGRES_PORT:5432}
+      db: ${env.POSTGRES_DBNAME:rag_blueprint}
+      user: ${env.POSTGRES_USER:postgres}
+      password: ${env.POSTGRES_PASSWORD:rag_password}
   safety:
   - provider_id: llama-guard
     provider_type: inline::llama-guard
