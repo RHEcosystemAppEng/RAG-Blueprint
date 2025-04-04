@@ -4,9 +4,13 @@ read -r -p "Enter Hugging Face Token: " HF_TOKEN
 echo "$HF_TOKEN"
 
 NAMESPACE=llama-stack-rag
+
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=rag_password
 POSTGRES_DBNAME=rag_blueprint
+
+MINIO_USER=minio_rag_user
+MINIO_PASSWORD=minio_rag_password
  
 oc new-project $NAMESPACE
 oc create secret -n $NAMESPACE generic huggingface-secret --from-literal=HF_TOKEN="$HF_TOKEN"
@@ -16,9 +20,16 @@ oc create secret -n $NAMESPACE generic pgvector \
        --from-literal=host=pgvector \
        --from-literal=port=5432 \
        --from-literal=dbname=$POSTGRES_DBNAME
+oc create secret -n $NAMESPACE generic minio \
+       --from-literal=username=$MINIO_USER \
+       --from-literal=password=$MINIO_PASSWORD \
+       --from-literal=host=minio \
+       --from-literal=port=9090
+
 
 oc annotate secret huggingface-secret -n $NAMESPACE meta.helm.sh/release-name=rag meta.helm.sh/release-namespace=$NAMESPACE
 oc annotate secret pgvector -n $NAMESPACE meta.helm.sh/release-name=rag meta.helm.sh/release-namespace=$NAMESPACE
+oc annotate secret minio -n $NAMESPACE meta.helm.sh/release-name=rag meta.helm.sh/release-namespace=$NAMESPACE
 
 # DOMAIN=$(kubectl get Ingress.config.openshift.io/cluster -o jsonpath='{.spec.domain}')
 

@@ -1,0 +1,67 @@
+# Default values for minio.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: quay.io/minio/minio
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: latest
+
+imagePullSecrets: []
+
+nameOverride: "minio"
+fullnameOverride: "minio"
+
+serviceAccount:
+  create: false
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 9090
+
+command:
+  - /bin/bash
+  - -c
+  - minio server /data --console-address :9090
+
+env:
+  - name: MINIO_ROOT_USER
+    valueFrom:
+      secretKeyRef:
+        key: username
+        name: minio
+  - name: MINIO_ROOT_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        key: password
+        name: minio
+
+resources: {}
+
+autoscaling:
+  enabled: false
+
+volumeClaimTemplates:
+  - metadata:
+      name: minio-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 50Gi
+
+volumeMounts:
+  - mountPath: /data
+    name: minio-data
+
+nodeSelector: {}
+affinity: {}
