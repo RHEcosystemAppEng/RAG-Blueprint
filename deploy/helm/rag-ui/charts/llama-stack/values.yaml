@@ -43,12 +43,8 @@ args:
 env:
   - name: VLLM_MAX_TOKENS
     value: "4096"
-  - name: VLLM_URL
-    value: http://vllm:8000/v1
   - name: VLLM_API_TOKEN
     value: fake
-  - name:  SAFETY_VLLM_URL
-    value: http://safety:8000/v1
   - name: OTEL_ENDPOINT
     value: http://otel-collector-collector.observability-hub.svc.cluster.local:4318/v1/traces
   - name: POSTGRES_USER

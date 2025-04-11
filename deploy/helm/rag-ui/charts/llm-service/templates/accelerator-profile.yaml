@@ -1,0 +1,17 @@
+{{- if .Values.acceleratorProfile.enabled -}}
+apiVersion: dashboard.opendatahub.io/v1
+kind: AcceleratorProfile
+metadata:
+  name: {{ .Values.acceleratorProfile.name }}
+  namespace: redhat-ods-applications
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
+spec:
+  displayName: {{ .Values.acceleratorProfile.displayName }}
+  enabled: true
+  identifier: {{ .Values.acceleratorProfile.identifier }}
+  {{- with .Values.acceleratorProfile.tolerations }}
+  tolerations:
+    {{- toYaml . | nindent 2 }}
+  {{- end }}
+{{- end }}

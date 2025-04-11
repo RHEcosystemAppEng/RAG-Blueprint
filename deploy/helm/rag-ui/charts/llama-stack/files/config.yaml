@@ -18,12 +18,14 @@ providers:
       url: ${env.VLLM_URL}
       max_tokens: 4096
       api_token: fake
+      tls_verify: ${env.VLLM_TLS_VERIFY:false}
   - provider_id: vllm-safety
     provider_type: remote::vllm
     config:
       url: ${env.SAFETY_VLLM_URL}
       max_tokens: 4096
       api_token: fake
+      tls_verify: ${env.VLLM_TLS_VERIFY:false}
   - provider_id: sentence-transformers
     provider_type: inline::sentence-transformers
     config: {}

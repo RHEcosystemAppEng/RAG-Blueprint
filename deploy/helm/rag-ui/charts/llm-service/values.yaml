@@ -1,0 +1,25 @@
+acceleratorProfile:
+  enabled: false
+  name: nvidia-gpu
+  displayName: NVIDIA GPU
+  identifier: nvidia.com/gpu
+
+servingRuntime:
+  name: vllm-serving-runtime
+  knativeTimeout: 60m
+  env:
+  - name: HOME
+    value: /vllm
+  volumeMounts:
+  - mountPath: /dev/shm
+    name: shm
+  - mountPath: /vllm
+    name: vllm-home
+  volumes:
+  - emptyDir:
+      medium: Memory
+      sizeLimit: 2Gi
+    name: shm
+  - emptyDir:
+      sizeLimit: 5Gi
+    name: vllm-home

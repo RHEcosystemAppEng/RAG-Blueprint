@@ -1,0 +1,18 @@
+FROM registry.access.redhat.com/ubi9/python-311:latest as base
+
+ARG HF_TOKEN
+ARG MODEL_ID
+
+USER root
+
+RUN pip install huggingface-hub
+
+RUN huggingface-cli download --repo-type model --token ${HF_TOKEN} --local-dir=/models ${MODEL_ID}
+
+# Final image containing only the essential model files
+FROM registry.access.redhat.com/ubi9/ubi-micro:9.4
+
+# Copy the model files from the base container
+COPY --from=base /models /models
+
+USER 1001

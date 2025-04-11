@@ -1,0 +1,40 @@
+{{- $root := . }}
+{{- range $key, $model := $.Values.global.models }}
+---
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: {{ $model.inferenceService.name }}
+  annotations:
+    openshift.io/display-name: {{ $model.inferenceService.name }}
+    serving.knative.openshift.io/enablePassthrough: "true"
+    sidecar.istio.io/inject: "true"
+    sidecar.istio.io/rewriteAppHTTPProbers: "true"
+  labels:
+    opendatahub.io/dashboard: "true"
+spec:
+  predictor:
+    maxReplicas: 1
+    minReplicas: 1
+    model:
+      modelFormat:
+        name: vLLM
+      name: ""
+      resources: {}
+      runtime: {{ $root.Values.servingRuntime.name }}
+      storageUri: {{ $model.inferenceService.storageUri }}
+      args:
+      - --served-model-name
+      - {{ $model.id }}
+      {{- with $model.inferenceService.args }}
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
+      {{- with $model.inferenceService.env }}
+      env:
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
+    {{- with $model.inferenceService.tolerations }}
+    tolerations:
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}

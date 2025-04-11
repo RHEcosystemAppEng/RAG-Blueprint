@@ -78,7 +78,9 @@ install: namespace secrets
 	@echo "Deploying Helm chart $(CHART_PATH) as release $(RELEASE_NAME) in namespace $(NAMESPACE)..."
 	helm upgrade --install $(RELEASE_NAME) $(CHART_PATH) -n $(NAMESPACE) \
 	--set-json llama-serve.tolerations='[{"key":"$(TOLERATION_LLM_SERVER)","effect":"NoSchedule","operator":"Exists"}]' \
-	--set-json safety-model.tolerations='[{"key":"$(TOLERATION_SAFETY_SERVER)","effect":"NoSchedule","operator":"Exists"}]'
+	--set-json safety-model.tolerations='[{"key":"$(TOLERATION_SAFETY_SERVER)","effect":"NoSchedule","operator":"Exists"}]' \
+	--set-json global.models.inference.tolerations='[{"key":"$(TOLERATION_LLM_SERVER)","effect":"NoSchedule","operator":"Exists"}]' \
+	--set-json global.models.safety.tolerations='[{"key":"$(TOLERATION_SAFETY_SERVER)","effect":"NoSchedule","operator":"Exists"}]'
 	
 	@$(MAKE) pg-vector
 	
@@ -155,7 +157,7 @@ status:
 .PHONY: wait
 wait:
 	@echo "Waiting for all pods to be ready in namespace $(NAMESPACE)..."
-	@timeout 600 bash -c 'until oc wait --for=condition=Ready pods --all -n $(NAMESPACE) --timeout=10s 2>/dev/null; do echo "Waiting for pods to be ready..."; sleep 5; done'
+	@timeout 3600 bash -c 'until oc wait --for=condition=Ready pods --all -n $(NAMESPACE) --timeout=10s 2>/dev/null; do echo "Waiting for pods to be ready..."; sleep 5; done'
 	@echo "All pods are now ready!"
 	
 	@echo "Checking deployment health..."

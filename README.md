@@ -15,6 +15,14 @@ Before deploying, make sure you have the following:
 - A valid **Hugging Face Token**.
 - Access to meta-llama/Llama-3.2-3B-Instruct model
 
+## Modelcars
+We deploy models using modelcars.  In order to build modelcars for specific models, we may use modelcars/Containerfile as follows:
+
+```bash
+podman build modelcars --build-arg=HF_TOKEN=${HF_TOKEN} --build-arg=MODEL_ID=meta-llama/Llama-3.2-3B-Instruct -t quay.io/username/modelcars:llama-3.2-3b-instruct
+podman push quay.io/username/modelcars:llama-3.2-3b-instruct
+```
+
 ## Pre-deployment Steps
 In case you have a fresh cluster -
 1. Install NFD Operator from OperatorHub
