@@ -1,11 +1,10 @@
-{{- $root := . }}
 ---
 apiVersion: serving.kserve.io/v1alpha1
 kind: ServingRuntime
 metadata:
   name: {{ .Values.servingRuntime.name }}
   annotations:
-    opendatahub.io/recommended-accelerators: '{{ printf "[%q]" $root.Values.acceleratorProfile.identifier }}'
+    opendatahub.io/recommended-accelerators: '{{ printf "[%q]" .Values.acceleratorProfile.identifier }}'
     openshift.io/display-name: {{ .Values.servingRuntime.name }}
   labels:
     opendatahub.io/dashboard: "true"
@@ -13,7 +12,7 @@ spec:
   annotations:
     prometheus.io/path: /metrics
     prometheus.io/port: "8080"
-    serving.knative.dev/progress-deadline: 30m
+    serving.knative.dev/progress-deadline: {{ .Values.servingRuntime.knativeTimeout }}
   containers:
   - command:
     - python3

@@ -1,3 +1,4 @@
+{{- if .Values.acceleratorProfile.enabled -}}
 apiVersion: dashboard.opendatahub.io/v1
 kind: AcceleratorProfile
 metadata:
@@ -13,3 +14,4 @@ spec:
   tolerations:
     {{- toYaml . | nindent 2 }}
   {{- end }}
+{{- end }}

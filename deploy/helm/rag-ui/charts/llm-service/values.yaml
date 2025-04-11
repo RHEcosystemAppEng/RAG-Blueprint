@@ -1,10 +1,12 @@
 acceleratorProfile:
+  enabled: false
   name: nvidia-gpu
   displayName: NVIDIA GPU
   identifier: nvidia.com/gpu
 
 servingRuntime:
   name: vllm-serving-runtime
+  knativeTimeout: 60m
   env:
   - name: HOME
     value: /vllm
