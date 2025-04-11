@@ -1,3 +1,5 @@
+{{- $root := . }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -39,13 +41,11 @@ spec:
           env:
             {{- toYaml .Values.env | nindent 12 }}
             {{- range $key, $model := $.Values.global.models }}
-            - name: {{ printf "%s_MODEL" (upper $key) }}
+            - name: {{ $model.llamaStack.modelIdEnvVar }}
               value: {{ $model.id }}
+            - name: {{ $model.llamaStack.modelUrlEnvVar }}
+              value: https://{{ $model.inferenceService.name }}.{{ $root.Release.Namespace }}.svc.cluster.local/v1
             {{- end }}
-            - name: VLLM_URL
-              value: https://{{ .Values.global.models.inference.serviceName }}.{{ .Release.Namespace }}.svc.cluster.local/v1
-            - name: SAFETY_VLLM_URL
-              value: https://{{ .Values.global.models.safety.serviceName }}.{{ .Release.Namespace }}.svc.cluster.local/v1
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}

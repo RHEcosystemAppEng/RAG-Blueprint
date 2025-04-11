@@ -70,18 +70,26 @@ global:
   models:
     inference:
       id: meta-llama/Llama-3.2-3B-Instruct
-      storageUri: oci://quay.io/yuvalturg/modelcars:llama-3.2-3b-instruct
-      serviceName: rag-inference
-      args:
-      - --enable-auto-tool-choice
-      - --chat-template
-      - /vllm-workspace/examples/tool_chat_template_llama3.2_json.jinja
-      - --tool-call-parser
-      - llama3_json
+      inferenceService:
+        name: rag-inference
+        storageUri: oci://quay.io/yuvalturg/modelcars:llama-3.2-3b-instruct
+        args:
+        - --enable-auto-tool-choice
+        - --chat-template
+        - /vllm-workspace/examples/tool_chat_template_llama3.2_json.jinja
+        - --tool-call-parser
+        - llama3_json
+      llamaStack:
+        modelIdEnvVar: INFERENCE_MODEL
+        modelUrlEnvVar: VLLM_URL
     safety:
       id: meta-llama/Llama-Guard-3-8B
-      storageUri: oci://quay.io/yuvalturg/modelcars:llama-guard-3-8b
-      serviceName: rag-safety
+      inferenceService:
+        name: rag-safety
+        storageUri: oci://quay.io/yuvalturg/modelcars:llama-guard-3-8b
+      llamaStack:
+        modelIdEnvVar: SAFETY_MODEL
+        modelUrlEnvVar: SAFETY_URL
 
 llm-service:
   servingRuntimeImage: docker.io/vllm/vllm-openai@sha256:4d8d397a62c36237293a4d5e2acbf911b91b0a8552825bda69f581c5811af9ec

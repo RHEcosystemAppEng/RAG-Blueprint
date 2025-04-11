@@ -4,9 +4,9 @@
 apiVersion: serving.kserve.io/v1beta1
 kind: InferenceService
 metadata:
-  name: {{ $model.serviceName }}
+  name: {{ $model.inferenceService.name }}
   annotations:
-    openshift.io/display-name: {{ $model.serviceName }}
+    openshift.io/display-name: {{ $model.inferenceService.name }}
     serving.knative.openshift.io/enablePassthrough: "true"
     sidecar.istio.io/inject: "true"
     sidecar.istio.io/rewriteAppHTTPProbers: "true"
@@ -22,18 +22,18 @@ spec:
       name: ""
       resources: {}
       runtime: {{ $root.Values.servingRuntime.name }}
-      storageUri: {{ .storageUri }}
+      storageUri: {{ $model.inferenceService.storageUri }}
       args:
       - --served-model-name
       - {{ $model.id }}
-      {{- with $model.args }}
+      {{- with $model.inferenceService.args }}
         {{- toYaml . | nindent 6 }}
       {{- end }}
-      {{- with $model.env }}
+      {{- with $model.inferenceService.env }}
       env:
         {{- toYaml . | nindent 6 }}
       {{- end }}
-    {{- with $model.tolerations }}
+    {{- with $model.inferenceService.tolerations }}
     tolerations:
       {{- toYaml . | nindent 4 }}
     {{- end }}
