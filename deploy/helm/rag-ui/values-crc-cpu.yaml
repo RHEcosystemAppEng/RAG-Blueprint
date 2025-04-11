@@ -89,7 +89,7 @@ global:
         storageUri: oci://quay.io/yuvalturg/modelcars:llama-guard-3-1b
       llamaStack:
         modelIdEnvVar: SAFETY_MODEL
-        modelUrlEnvVar: SAFETY_URL
+        modelUrlEnvVar: SAFETY_VLLM_URL
 
 llm-service:
   servingRuntimeImage: public.ecr.aws/q9t5s3a7/vllm-cpu-release-repo@sha256:6b0d6af534a3c2a24fbcbd0e5e919f9f215be73fdf799a7bbd324178956cb7df
