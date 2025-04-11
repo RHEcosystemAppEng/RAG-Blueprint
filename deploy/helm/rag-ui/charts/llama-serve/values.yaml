@@ -38,7 +38,7 @@ args:
   - --port
   - "8000"
   - '--max-model-len'
-  - '8192'
+  - '30544'
 
 env:
   - name: VLLM_PORT

@@ -1,0 +1,7 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: mcp-servers-config
+data:
+  mcp_servers_config.yaml: |
+{{ .Files.Get "files/mcp_servers_config.yaml" | indent 4}}

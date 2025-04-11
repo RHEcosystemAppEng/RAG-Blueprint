@@ -1,0 +1,11 @@
+mcp_servers:
+  - name: weather
+    url: http://mcp-servers-weather:8000/sse
+    prompts:
+      - "What is the weather alert of CA. Use the weather tool for the answer."
+      - "What is the weather alert of NY. Use the weather tool for the answer."
+      - "What is the weather alert of Texas. Search the web search to get the two letter state code for Texas and then use the weather tool for the answer."
+      - "What is the weather alert of North Carolina. Search the web search to get the two letter state code for the North Carolina and then use the weather tool for the answer."
+      - "What is the weather forecast of the location with latitude 35.791 and longitude -78.781. Use the weather tool for the answer."
+      - "What is the weather forecast of the Ithaca whose latitude is 42.443, and the longitude is -76.501. Use the weather tool for the answer."
+      - "What is the weather forecast of the Dallas, Texas. Use the web search to get the latitude and longitude of Dallas, Texas, langitude and longitude should be restriced to three places of decimal and then use the weather tool for the answer."

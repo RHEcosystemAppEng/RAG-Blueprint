@@ -6,13 +6,12 @@
 
 import os
 from typing import Optional
-
+import yaml
 from llama_stack_client import LlamaStackClient
-
+from modules.register_mcp_servers import RegisterMCPServers
 
 class LlamaStackApi:
     def __init__(self):
-        print(os.environ.get("LLAMA_STACK_ENDPOINT", "http://localhost:8321"))
         self.client = LlamaStackClient(
             base_url=os.environ.get("LLAMA_STACK_ENDPOINT", "http://localhost:8321"),
             
@@ -23,12 +22,13 @@ class LlamaStackApi:
                 "openai_api_key": os.environ.get("OPENAI_API_KEY", ""),
             },
         )
+        RegisterMCPServers().register(self.client)
+
 
     def run_scoring(self, row, scoring_function_ids: list[str], scoring_params: Optional[dict]):
         """Run scoring on a single row"""
         if not scoring_params:
             scoring_params = {fn_id: None for fn_id in scoring_function_ids}
         return self.client.scoring.score(input_rows=[row], scoring_functions=scoring_params)
-
 
 llama_stack_api = LlamaStackApi()

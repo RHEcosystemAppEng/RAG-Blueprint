@@ -13,6 +13,9 @@ CHART_PATH ?= rag-ui
 TOLERATION_LLM_SERVER ?= odh-notebook
 TOLERATION_SAFETY_SERVER ?= odh-notebook
 HF_TOKEN ?= $(shell bash -c 'read -r -p "Enter Hugging Face Token: " HF_TOKEN; echo $$HF_TOKEN')
+MCP_SERVERS_CHART_PATH ?= mcp-servers
+MCP_SERVERS_RELEASE_NAME ?= mcp-servers
+
 
 # Default target
 .PHONY: help
@@ -70,10 +73,18 @@ pg-vector:
 	@echo "Bootstrapping pgvector database"
 	oc rollout status sts/pgvector
 	oc exec -it sts/pgvector -- psql -U postgres -c "CREATE DATABASE $(POSTGRES_DBNAME);"
-	oc exec -it sts/pgvector -- psql -U postgres -d $(POSTGRES_DBNAME) -c "CREATE EXTENSION VECTOR;"	
+	oc exec -it sts/pgvector -- psql -U postgres -d $(POSTGRES_DBNAME) -c "CREATE EXTENSION VECTOR;"
+
+.PHONY: install-mcp-servers
+install-mcp-servers: namespace
+	
+	@echo "Deploying Helm chart $(MCP_SERVERS_CHART_PATH) as release $(MCP_SERVERS_RELEASE_NAME) in namespace $(NAMESPACE)..."
+	helm upgrade --install $(MCP_SERVERS_RELEASE_NAME) $(MCP_SERVERS_CHART_PATH) -n $(NAMESPACE) 
 
 .PHONY: install
 install: namespace secrets
+
+	@$(MAKE) install-mcp-servers
 
 	@echo "Deploying Helm chart $(CHART_PATH) as release $(RELEASE_NAME) in namespace $(NAMESPACE)..."
 	helm upgrade --install $(RELEASE_NAME) $(CHART_PATH) -n $(NAMESPACE) \
@@ -89,6 +100,8 @@ install: namespace secrets
 .PHONY: install-crc
 install-crc: namespace secrets
 
+	@$(MAKE) install-mcp-servers
+
 	@echo "Deploying Helm chart $(CHART_PATH) as release $(RELEASE_NAME) in namespace $(NAMESPACE)..."
 	helm upgrade --install $(RELEASE_NAME) $(CHART_PATH) -n $(NAMESPACE) --values rag-ui/values-crc-cpu.yaml
 	
@@ -100,13 +113,19 @@ install-crc: namespace secrets
 
 # Uninstall the deployment and clean up
 .PHONY: uninstall
-uninstall: uninstall-helm-release remove-secrets remove-pvcs
+uninstall: uninstall-helm-release uninstall-mcp-servers remove-secrets remove-pvcs
 
 	@echo "Checking for any remaining resources in namespace $(NAMESPACE)..."
 	@echo "If you want to completely remove the namespace, run: oc delete project $(NAMESPACE)"
 	
 	@echo "Remaining resources in namespace $(NAMESPACE):"
 	@$(MAKE) status
+
+.PHONY: uninstall-mcp-servers
+uninstall-mcp-servers:
+
+	@echo "Uninstalling Helm release $(MCP_SERVERS_RELEASE_NAME) from namespace $(NAMESPACE)..."
+	helm uninstall $(MCP_SERVERS_RELEASE_NAME) -n $(NAMESPACE) || echo "MCP servers are not installed or already removed."
 
 .PHONY: uninstall-helm-release
 uninstall-helm-release:

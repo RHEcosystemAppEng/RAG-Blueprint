@@ -39,6 +39,8 @@ service:
 env:
   - name: LLAMA_STACK_ENDPOINT
     value: 'http://llamastack:8321'
+  - name: MCP_SERVERS_CONFIG_FILE
+    value: "/app-config/mcp_servers_config.yaml"
 
 ingress:
   enabled: false
@@ -81,14 +83,16 @@ autoscaling:
   enabled: false
 
 # Additional volumes on the output Deployment definition.
-volumes: []
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
+volumes:
+  - configMap:
+      defaultMode: 420
+      name: mcp-servers-config
+    name: mcp-servers-config-volume
 
 # Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
+volumeMounts:
+  - mountPath: /app-config
+    name: mcp-servers-config-volume
 # - name: foo
 #   mountPath: "/etc/foo"
 #   readOnly: true

@@ -4,8 +4,9 @@
 # This source code is licensed under the terms described in the LICENSE file in
 # the root directory of this source tree.
 
+import uuid
 import streamlit as st
-
+from llama_stack_client import Agent, AgentEventLogger
 from modules.api import llama_stack_api
 
 # Sidebar configurations
@@ -18,6 +19,34 @@ with st.sidebar:
         available_models,
         index=0,
     )
+
+    tool_groups = llama_stack_api.client.toolgroups.list()
+    tool_groups_list = [tool_group.identifier for tool_group in
+                    tool_groups if tool_group.identifier.startswith("mcp::")]
+    
+    def reset_agent():
+        st.session_state.clear()
+        st.cache_resource.clear()
+
+    st.header("MCP Servers")
+    toolgroup_selection = st.pills(label="Available Servers",
+                                   options=tool_groups_list, 
+                                   selection_mode="multi",
+                                   on_change=reset_agent)
+    
+    grouped_tools = {}
+    total_tools = 0
+    for toolgroup_id in toolgroup_selection:
+        tools = llama_stack_api.client.tools.list(toolgroup_id=toolgroup_id)
+        grouped_tools[toolgroup_id] = [tool.identifier for tool in tools]
+        total_tools += len(tools)
+
+    st.markdown(f"Active Tools: 🛠 {total_tools}")
+
+    for group_id, tools in grouped_tools.items():
+        with st.expander(f"🔧 Tools from `{group_id}`"):
+            for idx, tool in enumerate(tools, start=1):
+                st.markdown(f"{idx}. `{group_id}:{tool}`")
 
     temperature = st.slider(
         "Temperature",
@@ -70,15 +99,43 @@ with st.sidebar:
 # Main chat interface
 st.title("🦙 Chat")
 
-
-# Initialize chat history
+# Chat Interface
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display chat messages
+# Display chat history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
+
+if temperature > 0.0:
+    strategy = {
+        "type": "top_p",
+        "temperature": temperature,
+        "top_p": top_p,
+    }
+else:
+    strategy = {"type": "greedy"}
+
+@st.cache_resource
+def create_agent():
+    return Agent(
+        llama_stack_api.client,
+        model=selected_model,
+        instructions=system_prompt, # + " When you use a tool always respond with a summary of the result.",
+        sampling_params={
+            "strategy": strategy,
+        },
+        tools=toolgroup_selection,
+    )
+
+agent = create_agent()
+
+# if "agent_session_id" not in st.session_state:
+#     st.session_state["agent_session_id"] = agent.create_session(session_name=f"mcp_demo_{uuid.uuid4()}")
+# session_id = st.session_state["agent_session_id"]
+
+session_id = agent.create_session("mcp-session-{uuid.uuid4()")
 
 # Chat input
 if prompt := st.chat_input("Example: What is Llama Stack?"):
@@ -89,42 +146,31 @@ if prompt := st.chat_input("Example: What is Llama Stack?"):
     with st.chat_message("user"):
         st.markdown(prompt)
 
+    response = agent.create_turn(
+        messages=[
+            {
+                "role": "user",
+                "content": prompt,
+            }
+        ],
+        session_id=session_id,
+    )
+
     # Display assistant response
     with st.chat_message("assistant"):
+        retrieval_message_placeholder = st.empty()
         message_placeholder = st.empty()
         full_response = ""
-
-        if temperature > 0.0:
-            strategy = {
-                "type": "top_p",
-                "temperature": temperature,
-                "top_p": top_p,
-            }
-        else:
-            strategy = {"type": "greedy"}
-
-        response = llama_stack_api.client.inference.chat_completion(
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt},
-            ],
-            model_id=selected_model,
-            stream=stream,
-            sampling_params={
-                "strategy": strategy,
-                "max_tokens": max_tokens,
-                "repetition_penalty": repetition_penalty,
-            },
-        )
-
-        if stream:
-            for chunk in response:
-                if chunk.event.event_type == "progress":
-                    full_response += chunk.event.delta.text
+        retrieval_response = ""
+        for log in AgentEventLogger().log(response):
+            log.print()
+            if log.role == "tool_execution":
+                retrieval_response += log.content.replace("====", "").strip()
+                retrieval_message_placeholder.info(retrieval_response)
+            else:
+                full_response += log.content
                 message_placeholder.markdown(full_response + "▌")
-            message_placeholder.markdown(full_response)
-        else:
-            full_response = response
-            message_placeholder.markdown(full_response.completion_message.content)
+        message_placeholder.markdown(full_response)
 
         st.session_state.messages.append({"role": "assistant", "content": full_response})
+
