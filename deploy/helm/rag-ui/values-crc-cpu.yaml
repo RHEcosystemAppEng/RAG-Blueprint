@@ -96,8 +96,9 @@ global:
         - --max-model-len
         - "30544"
       llamaStack:
-        modelIdEnvVar: INFERENCE_MODEL
-        modelUrlEnvVar: VLLM_URL
+        providerId: vllm-llama-instruct
+        modelIdEnvVar: LLAMA_INSTRUCT_MODEL
+        modelUrlEnvVar: LLAMA_INSTRUCT_VLLM_URL
     llama-guard:
       id: meta-llama/Llama-Guard-3-1B
       inferenceService:
@@ -108,8 +109,10 @@ global:
         - --max-model-len
         - "14336"
       llamaStack:
-        modelIdEnvVar: SAFETY_MODEL
-        modelUrlEnvVar: SAFETY_VLLM_URL
+        providerId: vllm-llama-guard
+        modelIdEnvVar: LLAMA_GUARD_MODEL
+        modelUrlEnvVar: LLAMA_GUARD_VLLM_URL
+        registerShield: true
 
 llm-service:
   servingRuntimeImage: public.ecr.aws/q9t5s3a7/vllm-cpu-release-repo@sha256:6b0d6af534a3c2a24fbcbd0e5e919f9f215be73fdf799a7bbd324178956cb7df
