@@ -12,7 +12,6 @@ RELEASE_NAME ?= rag
 CHART_PATH ?= rag-ui
 TOLERATION_LLM_SERVER ?= odh-notebook
 TOLERATION_SAFETY_SERVER ?= odh-notebook
-HF_TOKEN ?= $(shell bash -c 'read -r -p "Enter Hugging Face Token: " HF_TOKEN; echo $$HF_TOKEN')
 MCP_SERVERS_CHART_PATH ?= mcp-servers
 MCP_SERVERS_RELEASE_NAME ?= mcp-servers
 
@@ -31,7 +30,6 @@ help:
 	@echo "  NAMESPACE     			- Target namespace (default: llama-stack-rag)"
 	@echo "  RELEASE_NAME  			- Helm release name (default: rag)"
 	@echo "  CHART_PATH    			- Path to the Helm chart (default: rag-ui)"
-	@echo "  HF_TOKEN      			- Hugging Face Token (will prompt if not provided)"
 	@echo "  TOLERATION_LLM_SERVER			- Toleration for LLM Server (default: odh-notebook)"
 	@echo "  TOLERATION_SAFETY_SERVER		- Toleration for Safety Server (default: odh-notebook)"
 
@@ -44,9 +42,6 @@ namespace:
 
 .PHONY: secrets
 secrets:
-	@echo "Creating Hugging Face secret..."
-	oc create secret -n $(NAMESPACE) generic huggingface-secret --from-literal=HF_TOKEN="$(HF_TOKEN)" --dry-run=client -o yaml | oc apply -f -
-
 	@echo "Creating pgvector secret"
 	oc create secret -n $(NAMESPACE) generic pgvector \
 		--from-literal=username="$(POSTGRES_USER)" \
@@ -63,7 +58,6 @@ secrets:
        --from-literal=port=9000 || echo "Minio secret not created"
 
 	@echo "Annotating secrets..."
-	oc annotate secret huggingface-secret -n $(NAMESPACE) meta.helm.sh/release-name=$(RELEASE_NAME) meta.helm.sh/release-namespace=$(NAMESPACE) --overwrite
 	oc annotate secret pgvector -n $(NAMESPACE) meta.helm.sh/release-name=rag meta.helm.sh/release-namespace=$(NAMESPACE)
 	oc annotate secret minio -n $(NAMESPACE) meta.helm.sh/release-name=rag meta.helm.sh/release-namespace=$(NAMESPACE)
 
