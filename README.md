@@ -1,6 +1,7 @@
 # LLaMA Stack RAG Deployment
 
-This guide helps you deploy the **LLaMA Stack RAG UI** on an OpenShift cluster using Helm.
+This guide helps you deploy the **LLaMA Stack RAG UI** on an OpenShift cluster using Helm.  
+_Use [README-CPU](./README-CPU.md) for local development using CPU when no GPU available_
 
 
 ## Prerequisites
