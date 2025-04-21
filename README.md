@@ -12,16 +12,16 @@ Before deploying, make sure you have the following:
 - Two GPU nodes, one for vLLM and the other for Safety Model(A10 nodes)
 - The label - you can have any label on the node and pass it as part of the parameter to the deploy script. Please refer `deploy.sh`.
 - Helm is installed
-- A valid **Hugging Face Token**.
-- Access to meta-llama/Llama-3.2-3B-Instruct model
 
 ## Modelcars
-We deploy models using modelcars.  In order to build modelcars for specific models, we may use modelcars/Containerfile as follows:
+We deploy models using modelcars. To build modelcars for specific models, a valid Hugging Face token is needed and used with `modelcars/Containerfile` as follows:
 
 ```bash
 podman build modelcars --build-arg=HF_TOKEN=${HF_TOKEN} --build-arg=MODEL_ID=meta-llama/Llama-3.2-3B-Instruct -t quay.io/username/modelcars:llama-3.2-3b-instruct
 podman push quay.io/username/modelcars:llama-3.2-3b-instruct
 ```
+
+Modelcars for `llama-3.2-3b-instruct` and `llama-guard-3-8b` have already been built and will be used by default when deploying using the steps described below.
 
 ## Pre-deployment Steps
 In case you have a fresh cluster -
@@ -48,12 +48,9 @@ This will set your cluster to use the provided GPUs and you can move forward to 
    make install NAMESPACE=llama-stack-rag
    ```
 
-4. When prompted, enter your **Hugging Face Token**.
-
    The script will:
 
    - Create a new project: `llama-stack-rag`
-   - Create and annotate the `huggingface-secret`
    - Deploy the Helm chart with toleration settings
    - Output the status of the deployment
 
