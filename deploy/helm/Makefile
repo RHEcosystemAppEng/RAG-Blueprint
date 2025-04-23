@@ -23,6 +23,10 @@ INGESTION_PIPELINE_CHART_PATH ?= ingestion-pipeline
 MCP_SERVERS_RELEASE_NAME ?= mcp-servers
 INGESTION_PIPELINE_RELEASE_NAME ?= ingestion-pipeline
 TOLERATIONS_TEMPLATE=[{"key":"$(1)","effect":"NoSchedule","operator":"Exists"}]
+CONTEXT_PATH := ../../modelcars
+CONTAINERFILE := $(CONTEXT_PATH)/Containerfile
+CONTAINER_TOOL := $(shell command -v podman >/dev/null 2>&1 && echo podman || echo docker)
+
 
 # Default target
 .PHONY: help
@@ -231,3 +235,27 @@ wait:
 			echo "WARNING: No hostname found for ${route}"; \
 		fi; \
 	done
+
+.PHONY: build-modelcar
+build-modelcar:
+	@if [ -z "$(MODEL_ID)" ]; then \
+		echo "Error: MODEL_ID is not set"; exit 1; \
+	fi
+	@if [ -z "$(IMAGE_NAME)" ]; then \
+		echo "Error: IMAGE_NAME is not set"; exit 1; \
+	fi
+	@echo "Using container tool: $(CONTAINER_TOOL)"
+	@echo "Building model car image from HuggingFace model: $(MODEL_ID)"
+	$(CONTAINER_TOOL) build --build-arg HF_TOKEN=$(HF_TOKEN) --build-arg MODEL_ID=$(MODEL_ID) -t $(IMAGE_NAME) -f $(CONTAINERFILE) $(CONTEXT_PATH)
+
+.PHONY: push-modelcar
+push-modelcar:
+	@if [ -z "$(IMAGE_NAME)" ]; then \
+		echo "Error: IMAGE_NAME is not set"; exit 1; \
+	fi
+	@echo "Using container tool: $(CONTAINER_TOOL)"
+	@echo "Pushing model car image: $(IMAGE_NAME)"
+	$(CONTAINER_TOOL) push $(IMAGE_NAME)
+
+.PHONY: build-push-modelcar
+build_and_push_modelcar: build-modelcar push-modelcar
