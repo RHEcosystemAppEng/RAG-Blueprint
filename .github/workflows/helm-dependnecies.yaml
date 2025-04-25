@@ -23,7 +23,7 @@ jobs:
       # Run helm dependency build
       - name: Run helm dependency build
         run: |
-          cd deploy/helm/$(CHART_PATH)
+          cd deploy/helm/chartOfCharts
           helm dependency build
 
       # Check if there are changes
