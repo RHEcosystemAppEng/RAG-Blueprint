@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "safety-model.name" -}}
+{{- define "chartOfCharts.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "safety-model.fullname" -}}
+{{- define "chartOfCharts.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,16 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "safety-model.chart" -}}
+{{- define "chartOfCharts.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "safety-model.labels" -}}
-helm.sh/chart: {{ include "safety-model.chart" . }}
-{{ include "safety-model.selectorLabels" . }}
+{{- define "chartOfCharts.labels" -}}
+helm.sh/chart: {{ include "chartOfCharts.chart" . }}
+{{ include "chartOfCharts.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,17 +45,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "safety-model.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "safety-model.name" . }}
+{{- define "chartOfCharts.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "chartOfCharts.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "safety-model.serviceAccountName" -}}
+{{- define "chartOfCharts.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "safety-model.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "chartOfCharts.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
