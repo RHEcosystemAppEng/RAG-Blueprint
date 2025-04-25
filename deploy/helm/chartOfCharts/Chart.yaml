@@ -27,3 +27,16 @@ dependencies:
   - name: llama-stack
     version: 0.1.0
     repository: file://../ai-architecture/llama-stack
+  - name: llm-service
+    version: 0.1.0
+    repository: file://../ai-architecture/llm-service
+  - name: minio
+    version: 0.1.0
+    repository: file://../ai-architecture/minio
+  - name: pgvector
+    version: 0.1.0
+    repository: file://../ai-architecture/pgvector
+  - name: rag-ui
+    version: 0.1.0
+    repository: file://../rag-ui
+  

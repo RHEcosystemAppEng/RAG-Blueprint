@@ -18,7 +18,7 @@ data:
     - vector_io
     providers:
       inference:
-      {{- range $key, $model := $.Values.global.models }}
+      {{- range $key, $model := $.Values.models }}
       {{- if $model.enabled }}
       - provider_id: {{ $key }}
         provider_type: remote::vllm
@@ -124,7 +124,7 @@ data:
       type: sqlite
       db_path: ${env.SQLITE_STORE_DIR:~/.llama/distributions/remote-vllm}/registry.db
     models:
-    {{- range $key, $model := $.Values.global.models }}
+    {{- range $key, $model := $.Values.models }}
     {{- if $model.enabled }}
     - metadata: {}
       model_id: ${env.{{ $model.llamaStack.modelIdEnvName }}}

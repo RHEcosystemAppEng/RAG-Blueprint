@@ -1,4 +1,4 @@
-global:
+llama-stack:
   models:
     llama-3-2-1b-instruct:
       id: meta-llama/Llama-3.2-1B-Instruct

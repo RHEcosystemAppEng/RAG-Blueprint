@@ -1,6 +1,0 @@
-dependencies:
-- name: llama-stack
-  repository: file://../ai-architecture/llama-stack
-  version: 0.1.0
-digest: sha256:bd75e5468ebbe68e435f3334d474bbd2b55ad615ef9757a06c3ad3a95d5134fa
-generated: "2025-04-25T10:42:01.972769541-04:00"

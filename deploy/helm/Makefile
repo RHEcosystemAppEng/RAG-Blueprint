@@ -14,11 +14,11 @@ POSTGRES_DBNAME ?= rag_blueprint
 MINIO_USER ?= minio_rag_user
 MINIO_PASSWORD ?= minio_rag_password
 RELEASE_NAME ?= rag
-CHART_PATH ?= rag-ui
+CHART_PATH ?= chartOfCharts
 TOLERATION_LLM_SERVER ?= odh-notebook
 TOLERATION_SAFETY_SERVER ?= odh-notebook
 HF_TOKEN ?= $(shell bash -c 'read -r -p "Enter Hugging Face Token: " HF_TOKEN; echo $$HF_TOKEN')
-MCP_SERVERS_CHART_PATH ?= mcp-servers
+MCP_SERVERS_CHART_PATH ?= mcp-servers/weather
 INGESTION_PIPELINE_CHART_PATH ?= ingestion-pipeline
 MCP_SERVERS_RELEASE_NAME ?= mcp-servers
 INGESTION_PIPELINE_RELEASE_NAME ?= ingestion-pipeline
@@ -37,7 +37,7 @@ help:
 	@echo "Configuration options (set via environment variables or make arguments):"
 	@echo "  NAMESPACE     			- Target namespace (default: llama-stack-rag)"
 	@echo "  RELEASE_NAME  			- Helm release name (default: rag)"
-	@echo "  CHART_PATH    			- Path to the Helm chart (default: rag-ui)"
+	@echo "  CHART_PATH    			- Path to the Helm chart (default: chartOfCharts)"
 	@echo "  HF_TOKEN      			- Hugging Face Token (will prompt if not provided)"
 	@echo "  TOLERATION_LLM_SERVER			- Toleration for LLM Server (default: odh-notebook)"
 	@echo "  TOLERATION_SAFETY_SERVER		- Toleration for Safety Server (default: odh-notebook)"
@@ -96,10 +96,21 @@ install-ingestion-pipeline: namespace
 
 list-models-%:
 
-	@helm template dummy-release rag-ui/ --set _debugListModels=true --values rag-ui/values-$*.yaml |grep ^model
+	@helm dependency build chartOfCharts/
+	@helm template dummy-release chartOfCharts/ --set _debugListModels=true --values chartOfCharts/values-$*.yaml | grep model_id
 
 .PHONY: list-models
 list-models: list-models-gpu
+
+
+install-dry-run-%:
+
+	@helm dependency build chartOfCharts/
+	@helm template dummy-release chartOfCharts/ --set _debugListModels=true --values chartOfCharts/values-$*.yaml
+
+
+.PHONY: install-dry-run
+install-dry-run: install-dry-run-gpu
 
 set_helm_args = \
     $(if $(LLM),--set-json global.models.$(LLM).enabled='true',) \
@@ -117,12 +128,12 @@ install-%: namespace secrets
 	@$(MAKE) install-mcp-servers
 
 	@echo "Deploying Helm chart $(CHART_PATH) (services) release $(RELEASE_NAME) in namespace $(NAMESPACE)..."
-	helm upgrade --install $(RELEASE_NAME) $(CHART_PATH) -n $(NAMESPACE) --values rag-ui/values-$*.yaml \
+	helm upgrade --install $(RELEASE_NAME) $(CHART_PATH) -n $(NAMESPACE) --values $(CHART_PATH)/values-$*.yaml \
 	--set-json llama-stack.enabled=false $(HELM_ARGS) $(EXTRA_HELM_ARGS)
 	oc wait -n $(NAMESPACE) --for=condition=Ready --timeout=60m inferenceservice --all ||:
 
 	@echo "Deploying Helm chart $(CHART_PATH) (llamastack) as release $(RELEASE_NAME) in namespace $(NAMESPACE)..."
-	helm upgrade --install $(RELEASE_NAME) $(CHART_PATH) -n $(NAMESPACE) --values rag-ui/values-$*.yaml \
+	helm upgrade --install $(RELEASE_NAME) $(CHART_PATH) -n $(NAMESPACE) --values $(CHART_PATH)/values-$*.yaml \
 	--set-json llama-stack.enabled=true $(HELM_ARGS) $(EXTRA_HELM_ARGS)
 
 	@$(MAKE) pg-vector
