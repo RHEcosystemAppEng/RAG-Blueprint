@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'deploy/helm/**' # Only trigger when files in the Helm directory change
+
 
 jobs:
   helm-dependency-build:
@@ -26,7 +29,7 @@ jobs:
           cd deploy/helm/chartOfCharts
           helm dependency build
 
-      # Check if there are changes
+      # This validates if any changes were made to the Helm dependencies and pushes them if necessary
       - name: Check for changes
         run: |
           if [ -n "$(git status --porcelain)" ]; then
