@@ -15,6 +15,7 @@ MINIO_USER ?= minio_rag_user
 MINIO_PASSWORD ?= minio_rag_password
 RELEASE_NAME ?= rag
 CHART_PATH ?= rag-ui
+HF_TOKEN ?= $(shell bash -c 'read -r -p "Enter Hugging Face Token: " HF_TOKEN; echo $$HF_TOKEN')
 LLM_SERVICE_CHART_PATH ?= llm-service
 LLM_SERVICE_RELEASE_NAME ?= llm-service
 MCP_SERVERS_CHART_PATH ?= mcp-servers
@@ -67,12 +68,6 @@ namespace:
 	oc project $(NAMESPACE) ||:
 
 secrets:
-	@oc get secret -n $(NAMESPACE) huggingface-secret 2>/dev/null || { \
-		echo "Creating Hugging Face secret..."; \
-		bash -c 'read -r -p "Enter Hugging Face Token: " HF_TOKEN; echo $$HF_TOKEN; \
-			oc create secret -n $(NAMESPACE) generic huggingface-secret --from-literal=HF_TOKEN="$$HF_TOKEN" --dry-run=client -o yaml | oc apply -f -'; \
-	}
-
 	@oc get secret -n $(NAMESPACE) minio 2>/dev/null || { \
 		echo "Creating minio secret"; \
 		oc create secret -n $(NAMESPACE) generic minio \
@@ -83,7 +78,6 @@ secrets:
 	}
 
 	@echo "Annotating secrets..."
-	oc annotate secret huggingface-secret -n $(NAMESPACE) meta.helm.sh/release-name=$(RELEASE_NAME) meta.helm.sh/release-namespace=$(NAMESPACE) --overwrite
 	oc annotate secret minio -n $(NAMESPACE) meta.helm.sh/release-name=rag meta.helm.sh/release-namespace=$(NAMESPACE)
 
 .PHONY: pg-vector
@@ -137,9 +131,9 @@ helm_llm_service_args = \
 install-llm-service-%: namespace secrets
 	@$(eval HELM_ARGS := $(call helm_llm_service_args))
 
-	@echo "Deploying Helm chart $(LLM_SERVICE_CHART_PATH) as release $(LLM_SERVICE_RELEASE_NAME) in namespace $(NAMESPACE)..."
+	@echo "Deploying Helm chart $(LLM_SERVICE_CHART_PATH) as release $(LLM_SERVICE_RELEASE_NAME) in namespace $(NAMESPACE)..."; \
 	helm upgrade --install $(LLM_SERVICE_RELEASE_NAME) $(LLM_SERVICE_CHART_PATH) -n $(NAMESPACE) --values $(LLM_SERVICE_CHART_PATH)/values-$*.yaml \
-	$(HELM_ARGS) $(EXTRA_HELM_ARGS)
+		--set hf_token=$(HF_TOKEN) $(HELM_ARGS) $(EXTRA_HELM_ARGS)
 	@echo "Waiting for model services to deploy. It will take around 10-15 minutes depending on the size of the model..."
 	oc wait -n $(NAMESPACE) --for=condition=Ready --timeout=60m inferenceservice --all ||:
 
@@ -228,9 +222,6 @@ uninstall-helm-release:
 
 .PHONY: remove-secrets
 remove-secrets:
-
-	@echo "Removing Hugging Face secret..."
-	oc delete secret -n $(NAMESPACE) huggingface-secret || echo "Secret not found or already removed."
 
 	@echo "Removing minio secret"
 	oc delete secret -n $(NAMESPACE) minio || echo "Secret not found or already removed."
