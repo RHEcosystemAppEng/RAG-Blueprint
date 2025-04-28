@@ -54,7 +54,7 @@ env:
   - name: POSTGRES_USER
     valueFrom:
       secretKeyRef:
-        key: username
+        key: user
         name: pgvector
   - name: POSTGRES_PASSWORD
     valueFrom:

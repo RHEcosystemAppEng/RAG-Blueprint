@@ -32,7 +32,7 @@ env:
   - name: POSTGRES_USER
     valueFrom:
       secretKeyRef:
-        key: username
+        key: user
         name: pgvector
   - name: POSTGRES_PASSWORD
     valueFrom:
@@ -77,3 +77,10 @@ volumeMounts:
 
 nodeSelector: {}
 affinity: {}
+
+secret:
+  user: postgres
+  password: rag_password
+  dbname: rag_blueprint
+  host: pgvector
+  port: "5432"

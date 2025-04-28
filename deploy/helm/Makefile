@@ -73,16 +73,6 @@ secrets:
 			oc create secret -n $(NAMESPACE) generic huggingface-secret --from-literal=HF_TOKEN="$$HF_TOKEN" --dry-run=client -o yaml | oc apply -f -'; \
 	}
 
-	@oc get secret -n $(NAMESPACE) pgvector 2>/dev/null || { \
-		echo "Creating pgvector secret"; \
-		oc create secret -n $(NAMESPACE) generic pgvector \
-			--from-literal=username="$(POSTGRES_USER)" \
-			--from-literal=password="$(POSTGRES_PASSWORD)" \
-			--from-literal=host=pgvector \
-			--from-literal=port=5432 \
-			--from-literal=dbname="$(POSTGRES_DBNAME)"; \
-	}
-
 	@oc get secret -n $(NAMESPACE) minio 2>/dev/null || { \
 		echo "Creating minio secret"; \
 		oc create secret -n $(NAMESPACE) generic minio \
@@ -94,7 +84,6 @@ secrets:
 
 	@echo "Annotating secrets..."
 	oc annotate secret huggingface-secret -n $(NAMESPACE) meta.helm.sh/release-name=$(RELEASE_NAME) meta.helm.sh/release-namespace=$(NAMESPACE) --overwrite
-	oc annotate secret pgvector -n $(NAMESPACE) meta.helm.sh/release-name=rag meta.helm.sh/release-namespace=$(NAMESPACE)
 	oc annotate secret minio -n $(NAMESPACE) meta.helm.sh/release-name=rag meta.helm.sh/release-namespace=$(NAMESPACE)
 
 .PHONY: pg-vector
@@ -158,6 +147,9 @@ install-llm-service-%: namespace secrets
 install-llm-service: install-llm-service-gpu
 
 helm_llama_stack_args = \
+    --set pgvector.secret.user=$(POSTGRES_USER) \
+    --set pgvector.secret.password=$(POSTGRES_PASSWORD) \
+    --set pgvector.secret.dbname=$(POSTGRES_DBNAME) \
     $(if $(LLM),--set-json llama-stack.models.$(LLM).enabled='true',) \
     $(if $(SAFETY),--set-json llama-stack.models.$(SAFETY).enabled='true',) \
     $(if $(LLM_URL),--set-json llama-stack.models.$(LLM).url='"$(LLM_URL)"',) \
@@ -239,9 +231,6 @@ remove-secrets:
 
 	@echo "Removing Hugging Face secret..."
 	oc delete secret -n $(NAMESPACE) huggingface-secret || echo "Secret not found or already removed."
-
-	@echo "Removing pgvector secret"
-	oc delete secret -n $(NAMESPACE) pgvector || echo "Secret not found or already removed."
 
 	@echo "Removing minio secret"
 	oc delete secret -n $(NAMESPACE) minio || echo "Secret not found or already removed."
