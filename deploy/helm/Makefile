@@ -176,10 +176,19 @@ install-rag: namespace secrets install-mcp-servers
 
 	@$(MAKE) pg-vector
 	@$(MAKE) create-minio-bucket
-	
 	@$(MAKE) status
 	@$(MAKE) configure-pipeline-server
 	@$(MAKE) create-ingestion-pipeline
+
+	@echo "Waiting for deployment to be ready..."
+	@$(MAKE) wait
+
+.PHONY: install-llama-stack
+install-llama-stack:
+	@$(eval HELM_ARGS := $(call helm_llama_stack_args))
+
+	@echo "Deploying Helm chart $(CHART_PATH) as release $(RELEASE_NAME) in namespace $(NAMESPACE)..."
+	helm upgrade --install $(RELEASE_NAME) $(CHART_PATH) -n $(NAMESPACE) $(HELM_ARGS) $(EXTRA_HELM_ARGS)
 
 	@echo "Waiting for deployment to be ready..."
 	@$(MAKE) wait

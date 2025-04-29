@@ -86,7 +86,7 @@ The kickstart supports two modes of deployments
 - [Hugging Face Token](https://huggingface.co/settings/tokens)
 - Access to [Meta Llama](https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct/) model.
 - Access to [Meta Llama Guard](https://huggingface.co/meta-llama/Llama-Guard-3-8B/) model.
-- Some of the example scripts use `jq` a JSON parsing utility which you can acquire via `brew install jq`
+- Some of the example scripts use `jq` a JSON parsing utility which you can acquire via `brew install jq` if you are on a MacOS or using your favorite package manager if you are on Linux.
 
 ### Supported Models
 
@@ -180,7 +180,87 @@ model: llama-3-2-3b-instruct
 model: llama-guard-3-8b (shield)
 ```
 
-6. Install via make
+# Deploying RAG Blueprint Step by Step
+
+## Step 1: Deploy LLM Services
+
+When prompted, enter your **[Hugging Face Token]((https://huggingface.co/settings/tokens))
+```bash
+make install-llm-service NAMESPACE=llama-stack-rag LLM=llama-3-2-3b-instruct SAFETY=llama-guard-3-8b
+```
+
+This make take several minutes. When finish you may check the pods with `oc get pods`. You should find something like this:
+```
+llama-3-2-3b-instruct-predictor-00001-deployment-6dd848fb8lt6wg    3/3     Running     0          4m50s
+llama-guard-3-8b-predictor-00001-deployment-69497ff9d6-c7sjq       3/3     Running     0          4m47s
+```
+
+## Step 2: Install the mcp server
+```bash
+make install-mcp-servers NAMESPACE=llama-stack-rag
+```
+Verify that the pod is running for the mcp server:<br>
+`oc get pods`
+```
+mcp-servers-weather-65cff98c8b-ptjjm                               1/1     Running     0          4s
+```
+## Step 3: Deploy the main RAG UI components
+
+This step creates llama stack server, UI and the vector database.
+
+```bash
+make install-llama-stack NAMESPACE=llama-stack-rag
+```
+You should the below pods among the others:
+```
+llamastack-7d5df79695-r7kgf                                        1/1     Running     2 (88s ago)   109s
+pgvector-0                                                         1/1     Running     0             109s
+rag-rag-ui-7f5dcb5cf4-qhsj7                                        1/1     Running     0             109s
+```
+
+## Step 4: Set up PGVector database
+
+This step sets up the vector database by installing the vector extension.
+```bash
+make pg-vector NAMESPACE=llama-stack-rag
+```
+
+## Step 5: make create-minio-bucket NAMESPACE=llama-stack-rag
+Now we can add resources for ingesting files from an S3 bucket through an OpenShift AI pipeline. We start with MinIO.
+
+```bash
+make create-minio-bucket NAMESPACE=llama-stack-rag
+```
+You should be able to see MinIO pod running:
+```
+minio-0                                                            1/1     Running     0               4m17s
+```
+And also run `oc get routes | grep minio` to get both the web ui and the api urls for your cluster.
+
+## Step 6: Configure the ingestion pipeline server
+
+```bash
+make configure-pipeline-server NAMESPACE=llama-stack-rag
+```
+Now multiple pods will show up for OpenShift AI pipelines.
+
+## Step 7: Create an ingestion pipeline
+Finally an ingestion pipeline run can be created.
+
+```bash
+make create-ingestion-pipeline NAMESPACE=llama-stack-rag
+```
+You can check it using the OpenShif AI dashboard like below:
+
+![Pipeline Overview](docs/img/pipeline.png)
+
+You can also check individual runs:
+
+![Pipeline Overview](docs/img/pipeline.png)
+
+Check the usage of the RAG UI below.
+
+# Deploying RAG Blueprint All at once
 
 Use the taint key from above as the `LLM_TOLERATION` and `SAFETY_TOLERATION`
 
@@ -200,7 +280,7 @@ When prompted, enter your **[Hugging Face Token]((https://huggingface.co/setting
 
 Note: This process often takes 11 to 30 minutes
 
-7. Watch/Monitor
+## Watch/Monitor
 
 ```bash
 oc get pods -n llama-stack-rag
@@ -227,7 +307,7 @@ oc get svc -n llama-stack-rag
 oc get routes -n llama-stack-rag
 ```
 
-### Using the RAG UI
+## Using the RAG UI
 
 1. Get the route url for the application
 
