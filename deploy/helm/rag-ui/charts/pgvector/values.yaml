@@ -72,6 +72,8 @@ volumeClaimTemplates:
           storage: 5Gi
 
 volumeMounts:
+  - mountPath: /docker-entrypoint-initdb.d
+    name: initdb-volume
   - mountPath: /var/lib/postgresql
     name: pg-data
 

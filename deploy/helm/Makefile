@@ -67,14 +67,6 @@ namespace:
 	oc create namespace $(NAMESPACE) && oc label namespace $(NAMESPACE) modelmesh-enabled=false ||:
 	oc project $(NAMESPACE) ||:
 
-.PHONY: pg-vector
-pg-vector:
-
-	@echo "Bootstrapping pgvector database"
-	oc rollout -n $(NAMESPACE) status sts/pgvector
-	oc exec -itn $(NAMESPACE) sts/pgvector -- psql -U postgres -c "CREATE DATABASE $(POSTGRES_DBNAME);" ||:
-	oc exec -itn $(NAMESPACE) sts/pgvector -- psql -U postgres -d $(POSTGRES_DBNAME) -c "CREATE EXTENSION VECTOR;" ||:
-
 .PHONY: install-mcp-servers
 install-mcp-servers: namespace
 
@@ -153,7 +145,6 @@ install-rag: namespace install-mcp-servers
 	@echo "Deploying Helm chart $(CHART_PATH) as release $(RELEASE_NAME) in namespace $(NAMESPACE)..."
 	helm upgrade --install $(RELEASE_NAME) $(CHART_PATH) -n $(NAMESPACE) $(HELM_ARGS) $(EXTRA_HELM_ARGS)
 
-	@$(MAKE) pg-vector
 	@$(MAKE) create-minio-bucket
 
 	@$(MAKE) status

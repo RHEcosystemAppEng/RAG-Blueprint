@@ -80,3 +80,7 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+        - name: initdb-volume
+          configMap:
+            name: pgvector-initsql
