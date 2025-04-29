@@ -38,7 +38,7 @@ env:
   - name: MINIO_ROOT_USER
     valueFrom:
       secretKeyRef:
-        key: username
+        key: user
         name: minio
   - name: MINIO_ROOT_PASSWORD
     valueFrom:
@@ -66,3 +66,9 @@ volumeMounts:
 
 nodeSelector: {}
 affinity: {}
+
+secret:
+  user: minio_rag_user
+  password: minio_rag_password
+  host: minio
+  port: "9000"

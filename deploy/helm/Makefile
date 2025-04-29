@@ -67,19 +67,6 @@ namespace:
 	oc create namespace $(NAMESPACE) && oc label namespace $(NAMESPACE) modelmesh-enabled=false ||:
 	oc project $(NAMESPACE) ||:
 
-secrets:
-	@oc get secret -n $(NAMESPACE) minio 2>/dev/null || { \
-		echo "Creating minio secret"; \
-		oc create secret -n $(NAMESPACE) generic minio \
-			--from-literal=username=$(MINIO_USER) \
-			--from-literal=password=$(MINIO_PASSWORD) \
-			--from-literal=host=minio \
-			--from-literal=port=9000; \
-	}
-
-	@echo "Annotating secrets..."
-	oc annotate secret minio -n $(NAMESPACE) meta.helm.sh/release-name=rag meta.helm.sh/release-namespace=$(NAMESPACE)
-
 .PHONY: pg-vector
 pg-vector:
 
@@ -128,7 +115,7 @@ helm_llm_service_args = \
     $(if $(LLM_TOLERATION),--set-json models.$(LLM).inferenceService.tolerations='$(call TOLERATIONS_TEMPLATE,$(LLM_TOLERATION))',) \
     $(if $(SAFETY_TOLERATION),--set-json models.$(SAFETY).inferenceService.tolerations='$(call TOLERATIONS_TEMPLATE,$(SAFETY_TOLERATION))',)
 
-install-llm-service-%: namespace secrets
+install-llm-service-%: namespace
 	@$(eval HELM_ARGS := $(call helm_llm_service_args))
 
 	@echo "Deploying Helm chart $(LLM_SERVICE_CHART_PATH) as release $(LLM_SERVICE_RELEASE_NAME) in namespace $(NAMESPACE)..."; \
@@ -144,6 +131,8 @@ helm_llama_stack_args = \
     --set pgvector.secret.user=$(POSTGRES_USER) \
     --set pgvector.secret.password=$(POSTGRES_PASSWORD) \
     --set pgvector.secret.dbname=$(POSTGRES_DBNAME) \
+    --set minio.secret.user=$(MINIO_USER) \
+    --set minio.secret.password=$(MINIO_PASSWORD) \
     $(if $(LLM),--set-json llama-stack.models.$(LLM).enabled='true',) \
     $(if $(SAFETY),--set-json llama-stack.models.$(SAFETY).enabled='true',) \
     $(if $(LLM_URL),--set-json llama-stack.models.$(LLM).url='"$(LLM_URL)"',) \
@@ -158,7 +147,7 @@ create-minio-bucket:
 	oc exec -n $(NAMESPACE) minio-0 -- bash -c "mc alias set local http://localhost:9000 $(MINIO_USER) $(MINIO_PASSWORD) && mc mb local/$(BUCKET_NAME)" ||:
 
 .PHONY: install-rag
-install-rag: namespace secrets install-mcp-servers
+install-rag: namespace install-mcp-servers
 	@$(eval HELM_ARGS := $(call helm_llama_stack_args))
 
 	@echo "Deploying Helm chart $(CHART_PATH) as release $(RELEASE_NAME) in namespace $(NAMESPACE)..."
@@ -222,9 +211,6 @@ uninstall-helm-release:
 
 .PHONY: remove-secrets
 remove-secrets:
-
-	@echo "Removing minio secret"
-	oc delete secret -n $(NAMESPACE) minio || echo "Secret not found or already removed."
 
 	@echo "Removing pipeline secret"
 	oc delete secret -n $(NAMESPACE) rag-pipeline-secrets || echo "Secret not found or already removed."
