@@ -93,7 +93,7 @@ models:
     inferenceService:
       args:
       - --gpu-memory-utilization
-      - “0.4”
+      - '0.4'
       - --quantization
       - compressed-tensors
       - --enable-auto-tool-choice
@@ -102,4 +102,4 @@ models:
       - --tool-call-parser
       - llama3_json
       - --max-model-len
-      - “30544"
+      - '30544'
