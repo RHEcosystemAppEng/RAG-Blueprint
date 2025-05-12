@@ -43,6 +43,7 @@ helm_minio_args = \
 
 helm_llm_service_args = \
     --set llm-service.secret.hf_token=$(HF_TOKEN) \
+    $(if $(DEVICE),--set llm-service.device='$(DEVICE)',) \
     $(if $(LLM),--set global.models.$(LLM).enabled=true,) \
     $(if $(SAFETY),--set global.models.$(SAFETY).enabled=true,) \
     $(if $(LLM_TOLERATION),--set-json global.models.$(LLM).tolerations='$(call TOLERATIONS_TEMPLATE,$(LLM_TOLERATION))',) \
@@ -76,6 +77,7 @@ help:
 	@echo "Configuration options (set via environment variables or make arguments):"
 	@echo "  NAMESPACE                - Target namespace (default: llama-stack-rag)"
 	@echo "  HF_TOKEN                 - Hugging Face Token (will prompt if not provided)"
+	@echo "  DEVICE                	  - Deploy models on cpu or gpu (default)"
 	@echo "  {SAFETY,LLM}             - Model id as defined in values (eg. llama-3-2-1b-instruct)"
 	@echo "  {SAFETY,LLM}_URL         - Model URL"
 	@echo "  {SAFETY,LLM}_API_TOKEN   - Model API token for remote models"
