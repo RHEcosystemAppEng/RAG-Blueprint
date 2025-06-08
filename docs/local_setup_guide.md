@@ -63,10 +63,10 @@ Create a local directory for persistent data:
 mkdir -p ~/.llama
 ```
 
-Run the container:
-
+### Running the Container
+For macOS users:
 ```bash
-podman run -it \
+podman run --rm -it \
   -p $LLAMA_STACK_PORT:$LLAMA_STACK_PORT \
   -v ~/.llama:/root/.llama \
   --env INFERENCE_MODEL=$INFERENCE_MODEL \
@@ -82,6 +82,15 @@ podman network create llama-net
 podman run --privileged --network llama-net -it \
   -p $LLAMA_STACK_PORT:$LLAMA_STACK_PORT \
   llamastack/distribution-ollama \
+  --port $LLAMA_STACK_PORT
+```
+For Fedora users:
+```bash
+podman run --rm --privileged --network host -it \
+  -p $LLAMA_STACK_PORT:$LLAMA_STACK_PORT \
+  llamastack/distribution-ollama \
+  --env INFERENCE_MODEL=$INFERENCE_MODEL \
+  --env OLLAMA_URL=http://localhost:11434 \
   --port $LLAMA_STACK_PORT
 ```
 
